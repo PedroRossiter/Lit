@@ -1,0 +1,14 @@
+node_modules
+dist
+.env
+.env.*
+.git
+.gitignore
+*.md
+storage
+.baileys
+auth_info_baileys
+.vscode
+.idea
+coverage
+*.log

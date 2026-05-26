@@ -1,0 +1,38 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: liturgia-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: liturgia
+      POSTGRES_PASSWORD: liturgia_dev
+      POSTGRES_DB: liturgia_pro
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U liturgia -d liturgia_pro"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: liturgia-app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://liturgia:liturgia_dev@postgres:5432/liturgia_pro
+    volumes:
+      - ./storage:/app/storage
+      - baileys_auth:/app/.baileys
+
+volumes:
+  postgres_data:
+  baileys_auth:

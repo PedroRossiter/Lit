@@ -1,0 +1,40 @@
+# Dependencies
+node_modules/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Build artifacts
+dist/
+*.tsbuildinfo
+
+# Logs
+*.log
+npm-debug.log*
+logs/
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Storage (audio cache)
+storage/audios/
+!storage/audios/.gitkeep
+
+# Baileys auth state
+.baileys/
+auth_info_baileys/
+
+# Test coverage
+coverage/
+
+# Prisma local dev artifacts
+prisma/migrations/dev.db*

@@ -1,0 +1,38 @@
+{
+  "name": "liturgia-pro",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Curadoria diaria de liturgia via WhatsApp (texto + 3 audios + reflexao IA)",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "smoke:liturgy": "tsx src/scripts/smokeLiturgy.ts",
+    "smoke:tts": "tsx src/scripts/smokeTts.ts",
+    "smoke:reflection": "tsx src/scripts/smokeReflection.ts",
+    "smoke:full": "tsx src/scripts/smokeFullAudio.ts",
+    "db:migrate": "prisma migrate dev",
+    "db:push": "prisma db push",
+    "db:generate": "prisma generate",
+    "db:studio": "prisma studio"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "dotenv": "^16.4.5",
+    "microsoft-cognitiveservices-speech-sdk": "^1.50.0",
+    "openai": "^6.39.0",
+    "pino": "^9.5.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.17.0",
+    "pino-pretty": "^11.3.0",
+    "prisma": "^5.22.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  }
+}
