@@ -67,11 +67,68 @@ export function cleanForNarration(text: string): string {
 }
 
 function sectionTitle(kind: SectionKind, reference: string): string {
-  const labels: Record<SectionKind, string> = {
-    PRIMEIRA_LEITURA: 'Primeira Leitura',
-    SALMO: 'Salmo Responsorial',
-    SEGUNDA_LEITURA: 'Segunda Leitura',
-    EVANGELHO: 'Evangelho',
-  };
-  return `${labels[kind]}. ${reference}.`;
+  return `${SECTION_LABEL[kind]}. ${reference}.`;
+}
+
+const SECTION_LABEL: Record<SectionKind, string> = {
+  PRIMEIRA_LEITURA: 'Primeira Leitura',
+  SALMO: 'Salmo Responsorial',
+  SEGUNDA_LEITURA: 'Segunda Leitura',
+  EVANGELHO: 'Evangelho',
+};
+
+// Gera SSML rico para o Azure Speech Synthesis.
+// Diferenca vs texto puro: pausas calculadas, prosodia mais lenta (combina com
+// tom liturgico), enfase em palavras chave, transicoes suaves entre secoes.
+export function liturgyToSsml(
+  liturgy: ParsedLiturgy,
+  voiceName: string,
+): string {
+  const parts: string[] = [];
+
+  parts.push(
+    `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="http://www.w3.org/2001/mstts" xml:lang="pt-BR">`,
+  );
+  parts.push(`<voice name="${esc(voiceName)}">`);
+  // Prosodia: levemente mais lenta e com timbre suave para tom contemplativo
+  parts.push(`<prosody rate="-8%" pitch="-2%">`);
+
+  // Titulo do dia
+  parts.push(esc(liturgy.title) + '.');
+  parts.push('<break time="900ms"/>');
+
+  for (const section of liturgy.sections) {
+    parts.push(`<emphasis level="moderate">${SECTION_LABEL[section.kind]}.</emphasis>`);
+    parts.push('<break time="350ms"/>');
+    parts.push(esc(section.reference) + '.');
+    parts.push('<break time="700ms"/>');
+    parts.push(prepareSsmlText(section.text));
+    parts.push('<break time="1200ms"/>');
+  }
+
+  parts.push('</prosody>');
+  parts.push('</voice>');
+  parts.push('</speak>');
+
+  return parts.join('\n');
+}
+
+// Aplica cleanForNarration + escape XML + insere pausas curtas entre paragrafos.
+function prepareSsmlText(text: string): string {
+  const cleaned = cleanForNarration(text);
+  return cleaned
+    .split(/\n{2,}/)
+    .map((p) => esc(p.trim()))
+    .filter((p) => p.length > 0)
+    .join('<break time="450ms"/>');
+}
+
+// Escape de caracteres reservados em XML/SSML.
+function esc(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
 }

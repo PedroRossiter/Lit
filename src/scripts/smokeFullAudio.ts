@@ -3,7 +3,7 @@
 import { writeFile } from 'node:fs/promises';
 import { mkdirSync, existsSync } from 'node:fs';
 import path from 'node:path';
-import { liturgyToNarratedText } from '../domain/liturgy.js';
+import { liturgyToSsml } from '../domain/liturgy.js';
 import { VOICE_CONFIG, VOICE_STYLES } from '../domain/types.js';
 import { logger } from '../lib/logger.js';
 import { DancrfApiSource } from '../services/liturgy/dancrfApiSource.js';
@@ -17,38 +17,34 @@ async function main(): Promise<void> {
   // 1. Buscar liturgia
   const source = new DancrfApiSource();
   const liturgy = await source.fetch();
-  const narrated = liturgyToNarratedText(liturgy);
 
   logger.info(
-    {
-      title: liturgy.title,
-      sections: liturgy.sections.length,
-      narratedChars: narrated.length,
-    },
+    { title: liturgy.title, sections: liturgy.sections.length },
     'Liturgia obtida',
   );
 
-  // 2. Gerar audio em cada voz (em paralelo)
+  // 2. Gerar audio em cada voz via SSML (em paralelo)
   const tts = new AzureTtsService();
-  logger.info({ vozes: VOICE_STYLES }, 'Sintetizando audio completo...');
+  logger.info({ vozes: VOICE_STYLES }, 'Sintetizando audio com SSML...');
 
   await Promise.all(
     VOICE_STYLES.map(async (style) => {
       const voice = VOICE_CONFIG[style];
-      const result = await tts.synthesize(narrated, voice.voiceName);
+      const ssml = liturgyToSsml(liturgy, voice.voiceName);
+
+      const result = await tts.synthesizeSsml(ssml);
       const filename = path.join(OUTPUT_DIR, `${style.toLowerCase()}-completa.mp3`);
       await writeFile(filename, result.audio);
 
       const sizeMB = (result.bytes / 1024 / 1024).toFixed(2);
-      const estDurationSec = Math.round(narrated.length / 13);
 
       logger.info(
         {
           style,
+          voice: voice.voiceName,
           file: filename,
           sizeMB,
-          chars: narrated.length,
-          estDurationSec,
+          ssmlChars: ssml.length,
           generationSec: (result.durationMs / 1000).toFixed(1),
         },
         'Audio completo gerado',

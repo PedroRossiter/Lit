@@ -22,24 +22,50 @@ export class AzureTtsService {
       sdk.SpeechSynthesisOutputFormat.Audio16Khz32KBitRateMonoMp3;
   }
 
-  // Sintetiza um texto na voz especificada. Retorna o mp3 como Buffer.
+  // Sintetiza texto puro (voz definida no parametro).
   async synthesize(text: string, voiceName: string): Promise<SynthesisResult> {
+    return this.run((synth) => synth.speakTextAsync.bind(synth), text, {
+      voiceName,
+      charCount: text.length,
+    });
+  }
+
+  // Sintetiza SSML (voz definida dentro do proprio SSML em <voice name=...>).
+  async synthesizeSsml(ssml: string): Promise<SynthesisResult> {
+    return this.run((synth) => synth.speakSsmlAsync.bind(synth), ssml, {
+      voiceName: 'ssml',
+      charCount: ssml.length,
+    });
+  }
+
+  private run(
+    methodGetter: (
+      synth: sdk.SpeechSynthesizer,
+    ) => (
+      input: string,
+      onSuccess: (r: sdk.SpeechSynthesisResult) => void,
+      onError: (err: string) => void,
+    ) => void,
+    input: string,
+    meta: { voiceName: string; charCount: number },
+  ): Promise<SynthesisResult> {
     return new Promise((resolve, reject) => {
-      // Cria config local para nao mutar a config compartilhada com a voz.
       const config = sdk.SpeechConfig.fromSubscription(
         env.AZURE_SPEECH_KEY,
         env.AZURE_SPEECH_REGION,
       );
       config.speechSynthesisOutputFormat =
         sdk.SpeechSynthesisOutputFormat.Audio16Khz32KBitRateMonoMp3;
-      config.speechSynthesisVoiceName = voiceName;
+      if (meta.voiceName !== 'ssml') {
+        config.speechSynthesisVoiceName = meta.voiceName;
+      }
 
-      // Passar undefined faz o SDK acumular o audio em memoria em vez de tocar.
       const synthesizer = new sdk.SpeechSynthesizer(config, undefined);
       const t0 = Date.now();
+      const method = methodGetter(synthesizer);
 
-      synthesizer.speakTextAsync(
-        text,
+      method(
+        input,
         (result) => {
           const durationMs = Date.now() - t0;
           synthesizer.close();
@@ -47,14 +73,14 @@ export class AzureTtsService {
           if (result.reason !== sdk.ResultReason.SynthesizingAudioCompleted) {
             const cancellation = sdk.CancellationDetails.fromResult(result);
             const msg = `Azure TTS falhou: ${cancellation.reason} - ${cancellation.errorDetails}`;
-            logger.error({ voiceName, msg }, 'Erro na sintese');
+            logger.error({ ...meta, msg }, 'Erro na sintese');
             reject(new Error(msg));
             return;
           }
 
           const audio = Buffer.from(result.audioData);
           logger.debug(
-            { voiceName, durationMs, bytes: audio.length, chars: text.length },
+            { ...meta, durationMs, bytes: audio.length },
             'TTS sintese concluida',
           );
           resolve({ audio, durationMs, bytes: audio.length });
