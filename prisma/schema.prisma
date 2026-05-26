@@ -86,3 +86,26 @@ model WhatsappSession {
 
   @@map("whatsapp_sessions")
 }
+
+enum LeadStatus {
+  WAITING     // Aguardando lancamento do grupo
+  INVITED     // Convite enviado
+  JOINED      // Confirmou entrada no grupo
+  UNSUBSCRIBED
+}
+
+// Captura de leads via landing publica. Pessoas que querem receber
+// a liturgia quando o grupo for liberado.
+model Lead {
+  id        String     @id @default(cuid())
+  name      String
+  email     String     @unique
+  whatsapp  String?
+  status    LeadStatus @default(WAITING)
+  source    String?    // ex: "landing", "indicacao", "evento"
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@index([status, createdAt])
+  @@map("leads")
+}
