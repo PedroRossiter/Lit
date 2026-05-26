@@ -1,0 +1,88 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum VoiceStyle {
+  MASCULINA
+  FEMININA
+}
+
+enum DispatchStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+// Liturgia diaria. Uma por data.
+model Liturgy {
+  id        String   @id @default(cuid())
+  date      DateTime @unique @db.Date
+  rawText   String   @db.Text
+  source    String
+  fetchedAt DateTime @default(now())
+
+  reflections Reflection[]
+  audios      Audio[]
+  dispatches  Dispatch[]
+
+  @@map("liturgies")
+}
+
+// Reflexao gerada por IA. Uma por liturgia.
+model Reflection {
+  id          String   @id @default(cuid())
+  liturgyId   String   @unique
+  content     String   @db.Text
+  model       String
+  generatedAt DateTime @default(now())
+
+  liturgy Liturgy @relation(fields: [liturgyId], references: [id], onDelete: Cascade)
+
+  @@map("reflections")
+}
+
+// Arquivo de audio TTS. Tres por liturgia (uma por voiceStyle).
+model Audio {
+  id          String     @id @default(cuid())
+  liturgyId   String
+  voiceStyle  VoiceStyle
+  filePath    String
+  durationSec Int?
+  provider    String
+  generatedAt DateTime   @default(now())
+
+  liturgy Liturgy @relation(fields: [liturgyId], references: [id], onDelete: Cascade)
+
+  @@unique([liturgyId, voiceStyle])
+  @@map("audios")
+}
+
+// Registro de disparo no WhatsApp.
+model Dispatch {
+  id           String         @id @default(cuid())
+  liturgyId    String
+  groupId      String
+  status       DispatchStatus @default(PENDING)
+  sentAt       DateTime?
+  errorMessage String?        @db.Text
+  createdAt    DateTime       @default(now())
+
+  liturgy Liturgy @relation(fields: [liturgyId], references: [id], onDelete: Cascade)
+
+  @@index([status, createdAt])
+  @@map("dispatches")
+}
+
+// Estado de autenticacao Baileys persistido (sobrevive a restart).
+model WhatsappSession {
+  id        String   @id @default(cuid())
+  authState Json
+  updatedAt DateTime @updatedAt
+
+  @@map("whatsapp_sessions")
+}
