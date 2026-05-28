@@ -16,6 +16,10 @@ const envSchema = z.object({
   AZURE_SPEECH_KEY: z.string().min(1),
   AZURE_SPEECH_REGION: z.string().min(1),
 
+  // OpenAI - usado para TTS (gpt-4o-mini-tts). Opcional ate migrarmos a voz.
+  OPENAI_API_KEY: z.string().optional(),
+  OPENAI_TTS_MODEL: z.string().default('gpt-4o-mini-tts'),
+
   WHATSAPP_GROUP_ID: z.string().min(1),
   WHATSAPP_ADMIN_NUMBER: z.string().min(1),
   // Numero do chip do bot (Claro), usado no pareamento. So digitos com DDI.

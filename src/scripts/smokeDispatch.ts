@@ -6,15 +6,24 @@ import { dispatchOnce } from '../services/dispatch/dispatchService.js';
 import { createWhatsappClient } from '../services/whatsapp/whatsappWebService.js';
 
 async function main(): Promise<void> {
-  const groupId = env.WHATSAPP_GROUP_ID.endsWith('@g.us')
-    ? env.WHATSAPP_GROUP_ID
-    : null;
+  // --test forca o destino a ser o numero pessoal (WHATSAPP_TEST_NUMBER),
+  // ignorando o grupo. Util para revisar mudancas sem impactar o grupo.
+  const forceTestNumber = process.argv.includes('--test');
+
+  const groupId =
+    !forceTestNumber && env.WHATSAPP_GROUP_ID.endsWith('@g.us')
+      ? env.WHATSAPP_GROUP_ID
+      : null;
   const testNumber = env.WHATSAPP_TEST_NUMBER;
 
   if (!groupId && !testNumber) {
     logger.error(
       'Defina WHATSAPP_GROUP_ID (preferencial) ou WHATSAPP_TEST_NUMBER no .env',
     );
+    process.exit(1);
+  }
+  if (forceTestNumber && !testNumber) {
+    logger.error('--test exige WHATSAPP_TEST_NUMBER no .env');
     process.exit(1);
   }
 
