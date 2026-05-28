@@ -29,7 +29,8 @@ Thumbs.db
 storage/audios/
 !storage/audios/.gitkeep
 
-# Baileys auth state
+# WhatsApp auth state (whatsapp-web.js cria .wweb-auth/ via LocalAuth)
+.wweb-auth/
 .baileys/
 auth_info_baileys/
 
@@ -39,3 +40,7 @@ coverage/
 # Prisma local dev artifacts
 prisma/migrations/dev.db*
 qr.png
+qrcode-*.png
+
+# whatsapp-web.js cache do Chromium
+.wwebjs_cache/
