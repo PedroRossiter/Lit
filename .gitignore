@@ -38,3 +38,4 @@ coverage/
 
 # Prisma local dev artifacts
 prisma/migrations/dev.db*
+qr.png

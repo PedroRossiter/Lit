@@ -18,6 +18,11 @@ const envSchema = z.object({
 
   WHATSAPP_GROUP_ID: z.string().min(1),
   WHATSAPP_ADMIN_NUMBER: z.string().min(1),
+  // Numero do chip do bot (Claro), usado no pareamento. So digitos com DDI.
+  // Ex: "5511999999999"
+  WHATSAPP_BOT_NUMBER: z.string().optional(),
+  // Numero pessoal do dono do bot para smoke test de envio.
+  WHATSAPP_TEST_NUMBER: z.string().optional(),
 
   AUDIO_STORAGE_PATH: z.string().default('./storage/audios'),
 });
