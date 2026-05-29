@@ -33,10 +33,11 @@ const MessageMedia =
 
 const AUDIO_DIR = path.resolve('storage/audios/full');
 
-// Vozes OpenAI usadas em producao (escolhidas em A/B com Pedro).
+// Voz OpenAI usada em producao (escolhida em A/B com Pedro).
+// Reduzido para 1 voz para diminuir pressao de memoria no Chromium
+// do whatsapp-web.js durante o envio (cada mp3 ocupa ~5x em base64).
 const VOICES = [
-  { id: 'onyx', label: 'Voz masculina', filename: 'onyx' },
-  { id: 'nova', label: 'Voz feminina', filename: 'nova' },
+  { id: 'onyx', label: 'Áudio', filename: 'onyx' },
 ] as const;
 
 // Mapeamento secao -> rotulo e label do JSON adaptado.
